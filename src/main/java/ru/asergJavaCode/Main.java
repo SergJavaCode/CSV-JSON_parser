@@ -27,54 +27,19 @@ import java.util.List;
 
 
 public class Main {
-    static Employee objEmployee;
-    static List<Employee> tempListXML = new ArrayList<>();
-
     public static void main(String[] args) {
         String[] columnMapping = {"id", "firstName", "lastName", "country", "age"};
         String fileName = "data.csv";
         List<Employee> listCSV = parseCSV(columnMapping, fileName);
         List<Employee> listXML = parseXML("data.xml");
-        String json = listToJson(listCSV);
+        String csv = listToJson(listCSV);
         String xml = listToJson(listXML);
-        writeString(json, "dataCSV.json");
+        writeString(csv, "dataCSV.json");
         writeString(xml, "dataXML.json");
     }
 
-    private static List<Employee> read(Node node) {
-        NodeList nodeList = node.getChildNodes();
-        for (int i = 0; i < nodeList.getLength(); i++) {
-            Node node_ = nodeList.item(i);
-            String ss = node_.getNodeName();
-            if (Node.ELEMENT_NODE == node_.getNodeType()) {
-                Element element = (Element) node_;
-                element.getNodeValue();
-                String name = element.getTagName();
-                String value = element.getTextContent();
-                if (name.equals("id")) {
-                    objEmployee = new Employee();
-                    objEmployee.id = Long.parseLong(value);
-                }
-                if (name.equals("firstName")) {
-                    objEmployee.firstName = value;
-                }
-                if (name.equals("lastName")) {
-                    objEmployee.lastName = value;
-                }
-                if (name.equals("country")) {
-                    objEmployee.country = value;
-                }
-                if (name.equals("age")) {
-                    objEmployee.age = Integer.parseInt(value);
-                    tempListXML.add(objEmployee);
-                }
-                read(node_);
-            }
-        }
-        return tempListXML;
-    }
-
     private static List<Employee> parseXML(String path) {
+        List<Employee> tempListXML = new ArrayList<>();
         DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
         Document doc;
         try {
@@ -84,8 +49,23 @@ public class Main {
             throw new RuntimeException(e);
         }
         Node root = doc.getDocumentElement();
-        return read(root);
+        NodeList nodeList = root.getChildNodes();
+        int lNode = nodeList.getLength();
+        for (int i = 0; i < lNode; i++) {
+            Node node_ = nodeList.item(i);
+            if (Node.ELEMENT_NODE == node_.getNodeType()) {
+                Element employee = (Element) node_;
+                long id = Integer.parseInt(employee.getElementsByTagName("id").item(0).getTextContent());
+                String firstName = employee.getElementsByTagName("firstName").item(0).getTextContent();
+                String lastName = employee.getElementsByTagName("lastName").item(0).getTextContent();
+                String country = employee.getElementsByTagName("country").item(0).getTextContent();
+                int age = Integer.parseInt(employee.getElementsByTagName("age").item(0).getTextContent());
+                Employee objEmployee = new Employee(id, firstName, lastName, country, age);
+                tempListXML.add(objEmployee);
+            }
 
+        }
+        return tempListXML;
     }
 
     private static void writeString(String json, String file) {
